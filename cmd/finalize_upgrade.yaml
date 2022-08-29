@@ -1,0 +1,55 @@
+description: |
+    This action will run the CEDR to DRS finalize-upgrade action. This is meant to run on all nodes that will be upgraded to DRS.
+schemaVersion: '2.2'
+parameters:
+    apiToken:
+        type: String
+        description: (Required) CloudEndure API token.
+    projectId:
+        type: String
+        description: (Required) UUID of the CloudEndure Project to upgrade.
+    awsAccessKey:
+        type: String
+        description: (Required) AWS access key from target DRS account IAM user.
+    awsSecretAccessKey:
+        type: String
+        description: (Required) AWS secret access key from target DRS account IAM user.
+mainSteps:
+    - action: aws:downloadContent
+      name: downloadUpgradeLinux
+      precondition:
+        StringEquals:
+            - platformType
+            - Linux
+      inputs:
+        sourceType: "S3"
+        sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_tool.py"}'
+    - action: aws:runShellScript
+      name: RunFinalizeUpgradeToolLinux
+      precondition:
+        StringEquals:
+            - platformType
+            - Linux
+      inputs:
+        timeoutSeconds: '3600'
+        runCommand:
+            - "python3 cloudendure_to_drs_upgrade_tool.py finalize-upgrade --no-prompt --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }}"
+    - action: aws:downloadContent
+      name: downloadUpgradeWindows
+      precondition:
+        StringEquals:
+            - platformType
+            - Windows
+      inputs:
+        sourceType: "S3"
+        sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_tool.exe"}'
+    - action: aws:runShellScript
+      name: RunFinalizeUpgradeToolWindows
+      precondition:
+        StringEquals:
+            - platformType
+            - Windows
+      inputs:
+        timeoutSeconds: '3600'
+        runCommand:
+            - .\cloudendure_to_drs_upgrade_assessment_tool.exe finalize-upgrade --no-prompt --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }}

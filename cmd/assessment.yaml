@@ -1,0 +1,50 @@
+description: |
+    This action will run the CEDR to DRS assessment tool
+schemaVersion: '2.2'
+parameters:
+    apiToken:
+        type: String
+        description: (Required) CloudEndure API token.
+    projectId:
+        type: String
+        description: (Required) UUID of the CloudEndure Project to validate.
+
+mainSteps:
+    - action: aws:downloadContent
+      name: downloadAssessmentLinux
+      precondition:
+        StringEquals:
+            - platformType
+            - Linux
+      inputs:
+        sourceType: "S3"
+        sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_assessment_tool.py"}'
+    - action: aws:runShellScript
+      name: RunAssessmentToolLinux
+      precondition:
+        StringEquals:
+            - platformType
+            - Linux
+      inputs:
+        timeoutSeconds: '3600'
+        runCommand:
+            - "python3 cloudendure_to_drs_upgrade_assessment_tool.py --api-token {{ apiToken }}  --project-id {{ projectId }}"
+    - action: aws:downloadContent
+      name: downloadAssessmentWindows
+      precondition:
+        StringEquals:
+            - platformType
+            - Windows
+      inputs:
+        sourceType: "S3"
+        sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_assessment_tool.exe"}'
+    - action: aws:runShellScript
+      name: RunAssessmentToolWindows
+      precondition:
+        StringEquals:
+            - platformType
+            - Windows
+      inputs:
+        timeoutSeconds: '3600'
+        runCommand:
+            - .\cloudendure_to_drs_upgrade_assessment_tool.exe --api-token {{ apiToken }}  --project-id {{ projectId }}
