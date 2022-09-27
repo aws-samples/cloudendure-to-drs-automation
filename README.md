@@ -41,14 +41,14 @@ aws ssm create-document \
 ```
 ```
 aws ssm create-document \
-    --content file://start-upgrade.yaml \
+    --content file://start_upgrade.yaml \
     --name "cedr-to-drs-start-upgrade" \
     --document-type "Command" \
     --document-format YAML
 ```
 ```
 aws ssm create-document \
-    --content file://finalize-upgrade.yaml \
+    --content file://finalize_upgrade.yaml \
     --name "cedr-to-drs-finalize-upgrade" \
     --document-type "Command" \
     --document-format YAML
@@ -57,19 +57,19 @@ aws ssm create-document \
 - Run the assessment document on any SSM managed instance, this will provide a report output that will tell you if any servers need attention before migration to DRS. Be sure to replace all $VARIABLES with the values from your environment.
 
 ```
-aws ssm send-command --document-name "cedr-to-drs-assessment" --document-version "1" --targets '[{"Key":"InstanceIds","Values":["$INSTANCEID"]}]' --parameters '{"apiToken":["$APITOKEN"],"projectId":["$PROJECTID"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --cloud-watch-output-config '{"CloudWatchOutputEnabled":true,"CloudWatchLogGroupName":"cedr-upgrade"}' --region $REGION
+aws ssm send-command  --targets Key="InstanceIds",Values="$INSTANCEID" --document-name "cedr-to-drs-assessment" --parameters "apiToken=$APITOKEN","projectId=$PROJECTID" --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region $REGION
 ```
 
 - Run the start-upgrade document on all SSM instances to be migrated, this will begin the migration process by importing the most recent completed snapshot for testing. Be sure to replace all $VARIABLES with the values from your environment. In this example I am targeting all instances with a tag key of "cedr-attribute" and a tag value of "migrate" . This would need to be set on all instances you would like to upgrade. You could also select instances manually or by resource group.
 
 ```
-aws ssm send-command --document-name "cedr-to-drs-start-upgrade" --document-version "3" --targets '[{"Key":"tag:cedr-attribute","Values":["migrate"]}]' --parameters '{"apiToken":["$APITOKEN"],"projectId":["$PROJECTID"],"awsAccessKey":["$AWSACCESSKEY"],"awsSecretAccessKey":["$AWSSECRETACCESSKEY"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --cloud-watch-output-config '{"CloudWatchOutputEnabled":true}' --region $REGION
+aws ssm send-command --targets Key="tag:cedr-attribute",Values="migrate" --document-name "cedr-to-drs-start-upgrade" --parameters "apiToken=$APITOKEN","projectId=$PROJECTID","awsAccessKey=$AWSACCESSKEY","awsSecretAccessKey=$AWSSECRETACCESSKEY" --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region $REGION
 ```
 
 - Run the finalize-upgrade document on all SSM instances to be migrated, this will finalize the migration process and remove the CloudEndure agent from the source server. Be sure to replace all $VARIABLES with the values from your environment. In this example I am targeting all instances with a tag key of "cedr-attribute" and a tag value of "migrate" . This would need to be set on all instances you would like to upgrade. You could also select instances manually or by resource group.
 
 ```
-aws ssm send-command --document-name "cedr-to-drs-finalize-upgrade" --document-version "3" --targets '[{"Key":"tag:cedr-attribute","Values":["migrate"]}]' --parameters '{"apiToken":["$APITOKEN"],"projectId":["$PROJECTID"],"awsAccessKey":["$AWSACCESSKEY"],"awsSecretAccessKey":["$AWSSECRETACCESSKEY"]}' --timeout-seconds 600 --max-concurrency "50" --max-errors "0" --cloud-watch-output-config '{"CloudWatchOutputEnabled":true}' --region $REGION
+aws ssm send-command --targets Key="tag:cedr-attribute",Values="migrate" --document-name "cedr-to-drs-finalize-upgrade" --parameters "apiToken=$APITOKEN","projectId=$PROJECTID","awsAccessKey=$AWSACCESSKEY","awsSecretAccessKey=$AWSSECRETACCESSKEY" --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region $REGION
 ```
 
 ## Security

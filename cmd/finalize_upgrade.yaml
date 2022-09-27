@@ -43,7 +43,8 @@ mainSteps:
       inputs:
         sourceType: "S3"
         sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_tool.exe"}'
-    - action: aws:runShellScript
+        destinationPath: "C:\\temp\\"
+    - action: aws:runPowerShellScript
       name: RunFinalizeUpgradeToolWindows
       precondition:
         StringEquals:
@@ -52,4 +53,9 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
-            - .\cloudendure_to_drs_upgrade_assessment_tool.exe finalize-upgrade --no-prompt --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }}
+            - |
+               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "finalize-upgrade --no-prompt --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }} --import-test-snapshot --import-blueprint"
+               If ($Install.ExitCode -ne 0) {
+                    Write-Output "Error Upgrading to DRS exit code $($Process.ExitCode)"
+                    Exit 1
+                }
