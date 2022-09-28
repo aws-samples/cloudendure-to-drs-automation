@@ -33,7 +33,7 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
-            - "python3 cloudendure_to_drs_upgrade_tool.py finalize-upgrade --no-prompt --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }}"
+            - "python3 cloudendure_to_drs_upgrade_tool.py finalize-upgrade --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }}"
     - action: aws:downloadContent
       name: downloadUpgradeWindows
       precondition:
@@ -54,7 +54,7 @@ mainSteps:
         timeoutSeconds: '3600'
         runCommand:
             - |
-               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "finalize-upgrade --no-prompt --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }} --import-test-snapshot --import-blueprint"
+               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "finalize-upgrade --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }} --import-test-snapshot --import-blueprint"
                If ($Install.ExitCode -ne 0) {
                     Write-Output "Error Upgrading to DRS exit code $($Process.ExitCode)"
                     Exit 1
