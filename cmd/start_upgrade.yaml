@@ -49,7 +49,7 @@ mainSteps:
                awsSecretAccessKey=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{awsAccessKeySecret}} --query "SecretString" --output text | jq -r '.awsSecretAccessKey')
                apiToken=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{CloudEndureSecrets}} --query "SecretString" --output text | jq -r '.apiToken')
                projectId=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{CloudEndureSecrets}} --query "SecretString" --output text | jq -r '.projectId')
-               python3 cloudendure_to_drs_upgrade_tool.py start-upgrade --no-prompt --ignore-validation-warnings --api-token $apiToken  --project-id $projectId --aws-access-key-id $awsAccessKey --aws-secret-access-key $awsSecretAccessKey --import-test-snapshot --import-blueprint
+               python3 cloudendure_to_drs_upgrade_tool.py start-upgrade --no-prompt --ignore-validation-warnings --import-replication-configuration --api-token $apiToken  --project-id $projectId --aws-access-key-id $awsAccessKey --aws-secret-access-key $awsSecretAccessKey --import-test-snapshot --import-blueprint
     - action: aws:downloadContent
       name: downloadUpgradeWindows
       precondition:
@@ -76,7 +76,7 @@ mainSteps:
                $CEDRSecrets = Get-SECSecretValue -SecretId {{CloudEndureSecrets}} -ErrorAction Stop | Select-Object -ExpandProperty 'SecretString' | ConvertFrom-Json -ErrorAction Stop
                $Apitoken = $CEDRSecrets.apiToken
                $ProjectId = $CEDRSecrets.projectId
-               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "start-upgrade --no-prompt --ignore-validation-warnings --api-token $Apitoken  --project-id $ProjectId --aws-access-key-id $KeyId --aws-secret-access-key $SecretKey --import-test-snapshot --import-blueprint"
+               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "start-upgrade --no-prompt --ignore-validation-warnings --import-replication-configuration --api-token $Apitoken  --project-id $ProjectId --aws-access-key-id $KeyId --aws-secret-access-key $SecretKey --import-test-snapshot --import-blueprint"
                If ($Install.ExitCode -ne 0) {
                     Write-Output "Error Upgrading to DRS exit code $($Process.ExitCode)"
                     Exit 1 
