@@ -2,16 +2,10 @@ description: |
     This action will run the CEDR to DRS finalize-upgrade action. This is meant to run on all nodes that will be upgraded to DRS.
 schemaVersion: '2.2'
 parameters:
-    apiToken:
-        type: String
-        description: (Required) CloudEndure API token.
-    projectId:
-        type: String
-        description: (Required) UUID of the CloudEndure Project to upgrade.
-    awsAccessKey:
+    awsAccessKeySecret:
         type: String
         description: (Required) AWS access key from target DRS account IAM user.
-    awsSecretAccessKey:
+    CloudEndureSecrets:
         type: String
         description: (Required) AWS secret access key from target DRS account IAM user.
 mainSteps:
@@ -33,7 +27,12 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
-            - "python3 cloudendure_to_drs_upgrade_tool.py finalize-upgrade --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }}"
+            - | 
+               awsAccessKey=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{awsAccessKeySecret}} --query "SecretString" --output text | jq -r '.awsAccessKey')
+               awsSecretAccessKey=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{awsAccessKeySecret}} --query "SecretString" --output text | jq -r '.awsSecretAccessKey')
+               apiToken=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{CloudEndureSecrets}} --query "SecretString" --output text | jq -r '.apiToken')
+               projectId=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{CloudEndureSecrets}} --query "SecretString" --output text | jq -r '.projectId')
+               python3 cloudendure_to_drs_upgrade_tool.py finalize-upgrade --api-token $apiToken --project-id $projectId --aws-access-key-id $awsAccessKey --aws-secret-access-key $awsSecretAccessKey
     - action: aws:downloadContent
       name: downloadUpgradeWindows
       precondition:
@@ -54,7 +53,13 @@ mainSteps:
         timeoutSeconds: '3600'
         runCommand:
             - |
-               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "finalize-upgrade --api-token {{ apiToken }}  --project-id {{ projectId }} --aws-access-key-id {{ awsAccessKey }} --aws-secret-access-key {{ awsSecretAccessKey }} --import-test-snapshot --import-blueprint"
+               $AccessKeys = Get-SECSecretValue -SecretId {{awsAccessKeySecret}} -ErrorAction Stop | Select-Object -ExpandProperty 'SecretString' | ConvertFrom-Json -ErrorAction Stop
+               $KeyId = $AccessKeys.awsAccessKey
+               $SecretKey = $AccessKeys.awsSecretAccessKey
+               $CEDRSecrets = Get-SECSecretValue -SecretId {{CloudEndureSecrets}} -ErrorAction Stop | Select-Object -ExpandProperty 'SecretString' | ConvertFrom-Json -ErrorAction Stop
+               $Apitoken = $CEDRSecrets.apiToken
+               $ProjectId = $CEDRSecrets.projectId 
+               $Install = Start-Process -NoNewWindow -PassThru -Wait -FilePath "C:\temp\cloudendure_to_drs_upgrade_tool.exe" -ArgumentList "finalize-upgrade --api-token $Apitoken --project-id $ProjectId --aws-access-key-id $KeyId --aws-secret-access-key $SecretKey
                If ($Install.ExitCode -ne 0) {
                     Write-Output "Error Upgrading to DRS exit code $($Process.ExitCode)"
                     Exit 1

@@ -63,12 +63,16 @@ aws ssm send-command  --targets Key="InstanceIds",Values="$INSTANCEID" --documen
 - Run the start-upgrade document on all SSM instances to be migrated, this will begin the migration process by importing the most recent completed snapshot for testing. Be sure to replace all $VARIABLES with the values from your environment. In this example I am targeting all instances with a tag key of "cedr-attribute" and a tag value of "migrate" . This would need to be set on all instances you would like to upgrade. You could also select instances manually or by resource group.
 
 ```
+aws ssm send-command --targets Key="tag:cedr-attribute",Values="migrate" --document-nameag:cedr-attribute",Values="migrate" --document-name "cedr-to-drs-start-upgrade" --parameters "awsAccessKeySecretcloud-watch-output-config "CloudWatchOutputEnabled==MyAccessKeys","CloudEndureSecrets=cedrsecrets"  --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region us-east-1
+
 aws ssm send-command --targets Key="tag:cedr-attribute",Values="migrate" --document-name "cedr-to-drs-start-upgrade" --parameters "apiToken=$APITOKEN","projectId=$PROJECTID","awsAccessKey=$AWSACCESSKEY","awsSecretAccessKey=$AWSSECRETACCESSKEY" --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region $REGION
 ```
 
 - Run the finalize-upgrade document on all SSM instances to be migrated, this will finalize the migration process and remove the CloudEndure agent from the source server. Be sure to replace all $VARIABLES with the values from your environment. In this example I am targeting all instances with a tag key of "cedr-attribute" and a tag value of "migrate" . This would need to be set on all instances you would like to upgrade. You could also select instances manually or by resource group.
 
 ```
+aws ssm send-command --targets Key="tag:cedr-attribute",Values="migrate" --document-nameag:cedr-attribute",Values="migrate" --document-name "cedr-to-drs-finalize-upgrade" --parameters "awsAccessKeySecretcloud-watch-output-config "CloudWatchOutputEnabled==MyAccessKeys","CloudEndureSecrets=cedrsecrets"  --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region us-east-1
+
 aws ssm send-command --targets Key="tag:cedr-attribute",Values="migrate" --document-name "cedr-to-drs-finalize-upgrade" --parameters "apiToken=$APITOKEN","projectId=$PROJECTID","awsAccessKey=$AWSACCESSKEY","awsSecretAccessKey=$AWSSECRETACCESSKEY" --cloud-watch-output-config "CloudWatchOutputEnabled=true,CloudWatchLogGroupName=cedr-upgrade" --region $REGION
 ```
 

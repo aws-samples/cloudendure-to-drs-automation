@@ -1,0 +1,40 @@
+description: |
+    This action will run the CEDR to DRS start-upgrade action. This is meant to run on all nodes that will be upgraded to DRS.
+schemaVersion: '2.2'
+parameters:
+    Secrets1:
+        type: String
+        description: (Required) AWS secret access key from target DRS account IAM user.
+    Secrets2:
+        type: String
+        description: (Required) AWS secret access key from target DRS account IAM user.
+mainSteps:
+    - action: aws:runShellScript
+      name: RunStartUpgradeToolLinux
+      precondition:
+        StringEquals:
+            - platformType
+            - Linux
+      inputs:
+        timeoutSeconds: '3600'
+        runCommand:
+            - |
+               sudo yum install jq -y
+               awsAccessKey="$(aws secretsmanager get-secret-value --secret-id {{Secrets1}} --query "SecretString" --output text | jq '.awsAccessKey')"
+               awsSecretAccessKey="$(aws secretsmanager get-secret-value --secret-id {{Secrets1}} --query "SecretString" --output text | jq '.awsSecretAccessKey')"
+               apiToken="$(aws secretsmanager get-secret-value --secret-id {{Secrets2}} --query "SecretString" --output text | jq '.apiToken')"
+               projectId="$(aws secretsmanager get-secret-value --secret-id {{Secrets2}} --query "SecretString" --output text | jq '.projectId')"
+               echo "${awsAccessKey} ${awsSecretAccessKey} ${apiToken} ${projectId}"
+    - action: aws:runPowerShellScript
+      name: RunStartUpgradeToolWindows
+      precondition:
+        StringEquals:
+            - platformType
+            - Windows
+      inputs:
+        timeoutSeconds: '3600'
+        runCommand:
+            - |
+               $AccessKeys = ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId {{Secrets1}}).SecretString
+               $CEDRSecrets = ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId {{Secrets2}}).SecretString
+               echo "$AccessKeys" "$CEDRSecrets"
