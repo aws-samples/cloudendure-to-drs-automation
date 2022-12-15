@@ -9,6 +9,23 @@ parameters:
         type: String
         description: (Required) AWS secret access key from target DRS account IAM user.
 mainSteps:
+    - action: aws:runShellScript
+      name: installJQ
+      precondition:
+        StringEquals:
+            - platformType
+            - Linux
+      inputs:
+        timeoutSeconds: '300'
+        runCommand:
+            - |
+               if command -v apt-get >/dev/null; then
+                sudo apt-get install -y jq
+               elif command -v yum >/dev/null; then
+                sudo yum install -y jq
+               else
+                echo "Package Manager unknown, please install jq manually"
+               fi
     - action: aws:downloadContent
       name: downloadUpgradeLinux
       precondition:
