@@ -9,7 +9,7 @@ It is now possible to upgrade replicating servers from CloudEndure Disaster Reco
   - This step is ran on each replicating node. It imports a launchable CEDR snapshot into DRS to allow a drill to be performed before completeting the upgrade.
   
 - Finalize Upgrade
-  - Finaliziung the upgrade completes the process, replication will start happening in DRS and the CEDR agent will be removed.
+  - Finalizing the upgrade completes the process, replication will start happening in DRS and the CEDR agent will be removed.
   
 This repository contains SSM command documents that perform each step of the upgrade process. This allows unattended upgrades on any replicating server.
 
