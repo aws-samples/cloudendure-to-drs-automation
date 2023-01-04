@@ -5,9 +5,11 @@ parameters:
     apiToken:
         type: String
         description: (Required) CloudEndure API token.
+        allowedPattern: "([A-Z0-9]{4}-){15}[A-Z0-9]{4}"
     projectId:
         type: String
         description: (Required) UUID of the CloudEndure Project to validate.
+        allowedPattern: "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"        
 
 mainSteps:
     - action: aws:downloadContent
@@ -27,7 +29,7 @@ mainSteps:
             - Linux
       inputs:
         timeoutSeconds: '3600'
-        runCommand:
+        runCommand:      
             - "python3 cloudendure_to_drs_upgrade_assessment_tool.py --api-token {{ apiToken }}  --project-id {{ projectId }}"
     - action: aws:downloadContent
       name: downloadAssessmentWindows
@@ -38,7 +40,7 @@ mainSteps:
       inputs:
         sourceType: "S3"
         sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_assessment_tool.exe"}'
-    - action: aws:runShellScript
+    - action: aws:runPowerShellScript
       name: RunAssessmentToolWindows
       precondition:
         StringEquals:

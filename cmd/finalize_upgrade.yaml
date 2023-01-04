@@ -5,9 +5,11 @@ parameters:
     awsAccessKeySecret:
         type: String
         description: (Required) AWS access key from target DRS account IAM user.
+        allowedPattern: "[A-Za-z0-9]{20}"        
     CloudEndureSecrets:
         type: String
         description: (Required) AWS secret access key from target DRS account IAM user.
+        allowedPattern: "[A-Za-z0-9]{31}/[A-Za-z0-9]+$"         
 mainSteps:
     - action: aws:downloadContent
       name: downloadUpgradeLinux
