@@ -44,6 +44,24 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
+            - "cat << EOF > validate.py"
+            - "#!/usr/bin/python"
+            - "import re"
+            - "access_regex = '[A-Za-z0-9]{20}'"
+            - "access_pattern = re.compile(access_regex)"
+            - "response = re.fullmatch(access_pattern, {{ awsAccessKeySecret }})"
+            - "if response == None:"
+            - " raise Exception('Failed to validate parameter awsAccessKeySecret')"
+            - "secret_regex = '[A-Za-z0-9]{31}/[A-Za-z0-9]+$'"
+            - "secret_pattern = re.compile(secret_regex)"
+            - "response = re.fullmatch(secret_pattern, {{ CloudEndureSecrets }})"
+            - "if response == None:"
+            - " raise Exception('Failed to validate parameter CloudEndureSecrets')"
+            - "exit(0)"
+            - "EOF"
+            - "chmod +x validate.py"
+            - "$pyexec validate.py"
+            - "rm -f validate.py" 
             - |
                awsAccessKey=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{awsAccessKeySecret}} --query "SecretString" --output text | jq -r '.awsAccessKey')
                awsSecretAccessKey=$(aws secretsmanager get-secret-value --region us-east-1 --secret-id {{awsAccessKeySecret}} --query "SecretString" --output text | jq -r '.awsSecretAccessKey')
@@ -69,6 +87,16 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
+            - "$access_regex = '[A-Za-z0-9]{20}'"
+            - "if ({{ awsAccessKeySecret }} -notmatch $access_regex)"
+            - "{"
+            - " Write-Error 'Failed to validate parameter awsAccessKeySecret'"
+            - "}"
+            - "$secret_regex = '[A-Za-z0-9]{31}/[A-Za-z0-9]+$'"
+            - "if ({{ CloudEndureSecrets }} -notmatch $secret_regex)"
+            - "{"
+            - " Write-Error 'Failed to validate parameter CloudEndureSecrets'"
+            - "}"
             - |
                $AccessKeys = Get-SECSecretValue -SecretId {{awsAccessKeySecret}} -ErrorAction Stop | Select-Object -ExpandProperty 'SecretString' | ConvertFrom-Json -ErrorAction Stop
                $KeyId = $AccessKeys.awsAccessKey

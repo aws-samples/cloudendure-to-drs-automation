@@ -28,6 +28,24 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
+            - "cat << EOF > validate.py"
+            - "#!/usr/bin/python"
+            - "import re"
+            - "api_regex = '([A-Z0-9]{4}-){15}[A-Z0-9]{4}'"
+            - "api_pattern = re.compile(api_regex)"
+            - "response = re.fullmatch(api_pattern, {{ apiToken }})"
+            - "if response == None:"
+            - " raise Exception('Failed to validate parameter apiToken')"
+            - "project_regex = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'"
+            - "project_pattern = re.compile(project_regex)"
+            - "response = re.fullmatch(project_pattern, {{ projectId }})"
+            - "if response == None:"
+            - " raise Exception('Failed to validate parameter projectId')" 
+            - "exit(0)"
+            - "EOF"
+            - chmod +x validate.py
+            - "$pyexec validate.py"
+            - "rm -f validate.py"           
             - "python3 cloudendure_to_drs_upgrade_assessment_tool.py --api-token {{ apiToken }}  --project-id {{ projectId }}"
     - action: aws:downloadContent
       name: downloadAssessmentWindows
@@ -38,7 +56,7 @@ mainSteps:
       inputs:
         sourceType: "S3"
         sourceInfo: '{"path": "https://cloudendure-assets.s3.us-east-1.amazonaws.com/latest/cloudendure_to_drs_upgrade_assessment_tool.exe"}'
-    - action: aws:runShellScript
+    - action: aws:runPowerShellScript
       name: RunAssessmentToolWindows
       precondition:
         StringEquals:
@@ -47,4 +65,14 @@ mainSteps:
       inputs:
         timeoutSeconds: '3600'
         runCommand:
+            - "$api_regex = '([A-Z0-9]{4}-){15}[A-Z0-9]{4}'"
+            - "if ({{ apiToken }} -notmatch $api_regex)"
+            - "{"
+            - " Write-Error 'Failed to validate parameter apiToken'"
+            - "}"
+            - "$project_regex = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'"
+            - "if ({{ projectId }} -notmatch $api_regex)"
+            - "{"
+            - " Write-Error 'Failed validate parameter projectId'"
+            - "}"
             - .\cloudendure_to_drs_upgrade_assessment_tool.exe --api-token {{ apiToken }}  --project-id {{ projectId }}
