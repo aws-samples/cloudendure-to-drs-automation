@@ -29,7 +29,7 @@ mainSteps:
             - Linux
       inputs:
         timeoutSeconds: '3600'
-        runCommand:         
+        runCommand:      
             - "python3 cloudendure_to_drs_upgrade_assessment_tool.py --api-token {{ apiToken }}  --project-id {{ projectId }}"
     - action: aws:downloadContent
       name: downloadAssessmentWindows
